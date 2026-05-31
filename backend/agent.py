@@ -94,7 +94,7 @@ def create_agent_graph():
                     # If sensitive topic detected and we haven't asked yet, ask for confirmation
                     if not already_asked and not is_confirmation:
       
-                        return {"messages": [AIMessage(content="This is a sensitive topic. I want to approach it with care. Shall I continue with my insights?")]}
+                        return {"messages": [AIMessage(content="This is a sensitive topic. Astrology is for guidance and reflection. Shall I continue with my insights?")]}
         
         response = llm_with_tools.invoke(messages)
         return {"messages": [response]}
