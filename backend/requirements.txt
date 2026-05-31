@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+openai>=1.6.1
+langgraph
+langchain
+langchain-openai
+ephem
+requests
+python-dotenv
+pydantic

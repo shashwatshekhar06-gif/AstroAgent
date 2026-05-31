@@ -1,0 +1,6 @@
+.env
+*.db
+node_modules/
+__pycache__/
+eval/results_latest.json
+eval/results_log.csv
