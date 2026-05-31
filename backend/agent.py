@@ -4,7 +4,7 @@ AstroAgent LangGraph Agent - AI astrology guide with tool-calling loop
 import os
 from typing import TypedDict, Annotated, Sequence
 import operator
-from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage,AIMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
@@ -22,8 +22,8 @@ class AgentState(TypedDict):
     chart: dict | None
 
 
-# System prompt for Aradhana, the astrology guide
-SYSTEM_PROMPT = """You are Aradhana, a warm and insightful astrology guide.
+# System prompt for AstroAgent, the astrology guide
+SYSTEM_PROMPT = """You are AstroAgent, a warm and insightful astrology guide.
 
 The user's birth details will be included in their message. When you receive them:
 1. Call geocode_place with the exact place name from the message
@@ -68,6 +68,33 @@ def create_agent_graph():
         # Add system prompt if not present
         if not messages or not isinstance(messages[0], SystemMessage):
             messages = [SystemMessage(content=SYSTEM_PROMPT)] + list(messages)
+        
+        # Feature 2: Human-in-the-loop for sensitive topics
+        if messages:
+            last_user_message = None
+            for msg in reversed(messages):
+                if isinstance(msg, HumanMessage):
+                    last_user_message = msg.content.lower()
+                    break
+            
+            if last_user_message:
+                sensitive_words = ['death', 'die', 'divorce', 'suicide', 'illness', 'disease']
+                if any(word in last_user_message for word in sensitive_words):
+                    # Check if this is a confirmation message
+                    confirmation_words = ['yes', 'continue', 'proceed', 'go ahead', 'sure']
+                    is_confirmation = any(word in last_user_message for word in confirmation_words)
+                    
+                    # Check if we already asked for confirmation (look for our confirmation message in history)
+                    already_asked = False
+                    for msg in reversed(messages):
+                        if isinstance(msg, AIMessage) and "This is a sensitive topic" in msg.content:
+                            already_asked = True
+                            break
+                    
+                    # If sensitive topic detected and we haven't asked yet, ask for confirmation
+                    if not already_asked and not is_confirmation:
+      
+                        return {"messages": [AIMessage(content="This is a sensitive topic. I want to approach it with care. Shall I continue with my insights?")]}
         
         response = llm_with_tools.invoke(messages)
         return {"messages": [response]}
